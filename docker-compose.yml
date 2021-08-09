@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  bcfinalmoviecatalogsvc:
+    image: ${DOCKER_REGISTRY-}bcfinalmoviecatalogsvc
+    build:
+      context: .
+      dockerfile: src/BcFinalMovieCatalogSvc/Dockerfile
