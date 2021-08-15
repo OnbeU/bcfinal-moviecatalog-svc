@@ -6,3 +6,10 @@ services:
     build:
       context: .
       dockerfile: src/BcFinalMovieCatalogSvc/Dockerfile
+    networks:
+      - local-shared
+
+networks:
+  local-shared:
+    external:
+        name: bc-localdevelopment_network-to-share

@@ -1,15 +1,12 @@
+﻿using BcFinalMovieCatalogSvc.Data;
+using BcFinalMovieCatalogSvc.Features.DataSeeding;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace BcFinalMovieCatalogSvc
 {
@@ -31,10 +28,13 @@ namespace BcFinalMovieCatalogSvc
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "BcFinalMovieCatalogSvc", Version = "v1" });
             });
+
+            services.AddDbContext<BcFinalMovieCatalogSvcContext>(options =>
+                    options.UseInMemoryDatabase(nameof(BcFinalMovieCatalogSvcContext)));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, BcFinalMovieCatalogSvcContext context)
         {
             if (env.IsDevelopment())
             {
@@ -51,6 +51,9 @@ namespace BcFinalMovieCatalogSvc
             {
                 endpoints.MapControllers();
             });
+
+            var seeder = new DataSeeder(context, Assets.GetMovieMetadataSeeds());
+            seeder.SeedIt();
         }
     }
 }
