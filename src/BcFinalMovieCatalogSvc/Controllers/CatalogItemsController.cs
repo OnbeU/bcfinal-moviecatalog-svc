@@ -7,7 +7,7 @@ using BcFinalMovieCatalogSvc.Data;
 
 namespace BcFinalMovieCatalogSvc.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("catalogitems")]
     [ApiController]
     public class CatalogItemsController : ControllerBase
     {
