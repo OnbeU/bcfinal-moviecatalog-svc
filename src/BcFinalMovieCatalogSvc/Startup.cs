@@ -1,4 +1,5 @@
 ﻿using BcFinalMovieCatalogSvc.Data;
+using BcFinalMovieCatalogSvc.Features.DataSeeding;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +34,7 @@ namespace BcFinalMovieCatalogSvc
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, BcFinalMovieCatalogSvcContext context)
         {
             if (env.IsDevelopment())
             {
@@ -50,6 +51,9 @@ namespace BcFinalMovieCatalogSvc
             {
                 endpoints.MapControllers();
             });
+
+            var seeder = new DataSeeder(context, Assets.GetMovieMetadataSeeds());
+            seeder.SeedIt();
         }
     }
 }
