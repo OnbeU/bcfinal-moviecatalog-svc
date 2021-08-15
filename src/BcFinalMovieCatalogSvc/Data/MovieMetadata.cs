@@ -18,9 +18,6 @@ namespace BcFinalMovieCatalogSvc.Data
 
     public partial class MovieMetadata
     {
-        [JsonIgnore]
-        public long MovieMetadataId { get; set; }
-
         [JsonProperty("Title")]
         [Required]
         public string Title { get; set; }

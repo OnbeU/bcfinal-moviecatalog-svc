@@ -6,6 +6,6 @@ namespace BcFinalMovieCatalogSvc.Data
     {
         public Guid Id { get; set; }
 
-        public string DummyProperty { get; set; }
+        public MovieMetadata MovieMetadata { get; set; }
     }
 }

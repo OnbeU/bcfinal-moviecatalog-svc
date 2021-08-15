@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace BcFinalMovieCatalogSvc.Data
 {
@@ -14,5 +10,12 @@ namespace BcFinalMovieCatalogSvc.Data
         }
 
         public DbSet<BcFinalMovieCatalogSvc.Data.CatalogItem> CatalogItem { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<CatalogItem>().OwnsOne(x => x.MovieMetadata);
+        }
     }
 }
