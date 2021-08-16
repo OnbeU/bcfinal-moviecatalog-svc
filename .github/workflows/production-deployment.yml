@@ -45,7 +45,7 @@ jobs:
 
     - name: Build Docker Image
       run: |
-       docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/production/${{env.APP_NAME}}:${{ github.sha }} -f src/Dockerfile
+       docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/production/${{env.APP_NAME}}:${{ github.sha }} -f src/BcFinalMovieCatalogSvc/Dockerfile
        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/production/${{env.APP_NAME}}:${{ github.sha }}
 
     - name: 'Publish App Image to ACR'
