@@ -58,7 +58,7 @@ jobs:
        registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
        registry-username: ${{ secrets.REGISTRY_USERNAME }}
        registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-       name: aci-${{env.APP_NAME}}
+       name: aci-${{ steps.vars.outputs.url_tag }}
        location: 'West US 2'
 
     - name: Pull HELM chart
