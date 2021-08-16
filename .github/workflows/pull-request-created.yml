@@ -4,7 +4,7 @@ on:
     types: [opened, edited, reopened, synchronize]
  
 env:
-  APP_NAME: theatermanagement-bff
+  APP_NAME: moviecatalog-svc
   ACR_HELM_REPO_NAME: helm/apptemplate
   ACR_HELM_CHART_NAME: apptemplate
 jobs:
