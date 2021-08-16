@@ -4,7 +4,7 @@ on:
     types: [opened, edited, reopened, synchronize]
  
 env:
-  APP_NAME: theatermanagement-bff
+  APP_NAME: moviecatalog-svc
   ACR_HELM_REPO_NAME: helm/apptemplate
   ACR_HELM_CHART_NAME: apptemplate
 jobs:
@@ -53,12 +53,12 @@ jobs:
       uses: 'azure/aci-deploy@v1'
       with:
        resource-group: ${{ secrets.ACR_RESOURCE_GROUP }}
-       dns-name-label: ${{ secrets.ACR_RESOURCE_GROUP }}${{ github.run_number }}
+       dns-name-label: ${{ secrets.ACR_RESOURCE_GROUP }}${{ github.sha }}
        image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{env.APP_NAME}}:${{ github.sha }}
        registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
        registry-username: ${{ secrets.REGISTRY_USERNAME }}
        registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-       name: aci-${{env.APP_NAME}}
+       name: aci-${{ steps.vars.outputs.url_tag }}
        location: 'West US 2'
 
     - name: Pull HELM chart
@@ -72,7 +72,7 @@ jobs:
       run: |
           az aks get-credentials -n ${{ secrets.AKS_NAME }} -g ${{ secrets.AKS_RESOURCE_GROUP }} --admin
     
-    - name: publish Frontend App to AKS
+    - name: publish App to AKS
       run: |
          helm upgrade ${{ steps.vars.outputs.url_tag }} ./${{env.ACR_HELM_CHART_NAME}} \
            --namespace ${{ steps.vars.outputs.url_tag }} \
@@ -92,8 +92,8 @@ jobs:
            --set ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt \
            --set ingress.annotations."nginx\.ingress\.kubernetes\.io/rewrite-target"=$1 \
            --set-string ingress.annotations."nginx\.ingress\.kubernetes\.io/use-regex"="true" \
-           --set livenessProbe.path=/\ \
-           --set readinessProbe.path=/\ \
+           --set livenessProbe.enabled=false \
+           --set readinessProbe.enabled=false \
 
     - uses: actions/github-script@v4
       name: 'Create github pr comment and deployment'
