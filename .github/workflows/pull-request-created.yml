@@ -72,7 +72,7 @@ jobs:
       run: |
           az aks get-credentials -n ${{ secrets.AKS_NAME }} -g ${{ secrets.AKS_RESOURCE_GROUP }} --admin
     
-    - name: publish Frontend App to AKS
+    - name: publish App to AKS
       run: |
          helm upgrade ${{ steps.vars.outputs.url_tag }} ./${{env.ACR_HELM_CHART_NAME}} \
            --namespace ${{ steps.vars.outputs.url_tag }} \
@@ -92,8 +92,8 @@ jobs:
            --set ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt \
            --set ingress.annotations."nginx\.ingress\.kubernetes\.io/rewrite-target"=$1 \
            --set-string ingress.annotations."nginx\.ingress\.kubernetes\.io/use-regex"="true" \
-           --set livenessProbe.path=/\ \
-           --set readinessProbe.path=/\ \
+           --set livenessProbe.enabled=false \
+           --set readinessProbe.enabled=false \
 
     - uses: actions/github-script@v4
       name: 'Create github pr comment and deployment'
