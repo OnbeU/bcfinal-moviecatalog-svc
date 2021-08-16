@@ -1,0 +1,48 @@
+name: Pull-Request-Closed
+on:
+  pull_request:
+    types: [closed]
+ 
+env:
+  APP_NAME: theatermanagement-bff
+jobs:
+  build:
+    name: Remove_Preview_Environment_and_Deploy_to_Prod
+    runs-on: ubuntu-latest
+
+    steps:
+     # checkout the repo
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v2
+
+    - name: 'generate version tags'
+      id: vars
+      run: |
+         url_tag_suffix=${{ github.event.number }}
+         if [ -z "${url_tag_suffix}" ]; then
+         url_tag_suffix=$(git rev-parse --short=7 ${{ github.sha }})
+         fi
+         echo ::set-output name=url_tag::pr-${url_tag_suffix}-${{ env.APP_NAME }}-${{secrets.TEAM_NAME}}
+
+    - name: 'echo version tags'
+      id: echovars
+      run: |
+         echo  URL TAG -${{steps.vars.outputs.url_tag}}
+         echo  PR URL-${{steps.vars.outputs.pr_url}}
+   
+    - name: 'Login via Azure CLI'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Login to AKS
+      run: |
+          az aks get-credentials -n ${{ secrets.AKS_NAME }} -g ${{ secrets.AKS_RESOURCE_GROUP }} --admin
+    
+    - name: Delete Helm Chart
+      run: helm delete ${{ steps.vars.outputs.url_tag }} --namespace ${{ steps.vars.outputs.url_tag }}
+
+    - name: Delete Namespace
+      if: always()
+      run: kubectl delete namespace ${{ steps.vars.outputs.url_tag }}
+    

@@ -1,0 +1,134 @@
+name: Pull-Request-Created
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+ 
+env:
+  APP_NAME: theatermanagement-bff
+  ACR_HELM_REPO_NAME: helm/apptemplate
+  ACR_HELM_CHART_NAME: apptemplate
+jobs:
+  build:
+    name: Spin_Preview_Environment
+    runs-on: ubuntu-latest
+
+    steps:
+     # checkout the repo
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v2
+    - name: 'generate version tags'
+      id: vars
+      run: |
+         url_tag_suffix=${{ github.event.number }}
+         if [ -z "${url_tag_suffix}" ]; then
+         url_tag_suffix=$(git rev-parse --short=7 ${{ github.sha }})
+         fi
+         echo ::set-output name=url_tag::pr-${url_tag_suffix}-${{ env.APP_NAME }}-${{secrets.TEAM_NAME}}
+         echo ::set-output name=pr_url::pr-${url_tag_suffix}-${{ env.APP_NAME }}-${{secrets.TEAM_NAME}}.${{secrets.HOST_URL}}
+         echo  URL TAG Suffix -${url_tag_suffix}
+    - name: 'echo version tags'
+      id: echovars
+      run: |
+         echo  URL TAG -${{steps.vars.outputs.url_tag}}
+         echo  PR URL-${{steps.vars.outputs.pr_url}}
+   
+    - name: 'Login via Azure CLI'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: 'Docker Login to Registry'
+      uses: azure/docker-login@v1
+      with:
+       login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+       username: ${{ secrets.REGISTRY_USERNAME }}
+       password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build Docker Image
+      run: |
+       docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{env.APP_NAME}}:${{ github.sha }} -f src/Dockerfile
+       docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{env.APP_NAME}}:${{ github.sha }}
+
+    - name: 'Publish App Image to ACR'
+      uses: 'azure/aci-deploy@v1'
+      with:
+       resource-group: ${{ secrets.ACR_RESOURCE_GROUP }}
+       dns-name-label: ${{ secrets.ACR_RESOURCE_GROUP }}${{ github.run_number }}
+       image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{env.APP_NAME}}:${{ github.sha }}
+       registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+       registry-username: ${{ secrets.REGISTRY_USERNAME }}
+       registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+       name: aci-${{env.APP_NAME}}
+       location: 'West US 2'
+
+    - name: Pull HELM chart
+      run: |
+         export HELM_EXPERIMENTAL_OCI=1
+         echo '${{ secrets.REGISTRY_PASSWORD }}' | helm registry login ${{ secrets.REGISTRY_LOGIN_SERVER }} --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin 
+         helm chart pull ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.ACR_HELM_REPO_NAME }}:latest
+         helm chart export ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.ACR_HELM_REPO_NAME }}:latest
+    
+    - name: Login to AKS
+      run: |
+          az aks get-credentials -n ${{ secrets.AKS_NAME }} -g ${{ secrets.AKS_RESOURCE_GROUP }} --admin
+    
+    - name: publish Frontend App to AKS
+      run: |
+         helm upgrade ${{ steps.vars.outputs.url_tag }} ./${{env.ACR_HELM_CHART_NAME}} \
+           --namespace ${{ steps.vars.outputs.url_tag }} \
+           --create-namespace \
+           --install \
+           --wait \
+           --set image.repository=${{ secrets.REGISTRY_LOGIN_SERVER }}/${{env.APP_NAME}} \
+           --set nameOverride=${{env.APP_NAME}} \
+           --set image.tag=${{ github.sha }} \
+           --set replicaCount=1  \
+           --set ingress.hosts[0].host=${{ steps.vars.outputs.pr_url }}  \
+           --set ingress.hosts[0].paths[0].path=/  \
+           --set ingress.hosts[0].paths[0].pathType=Prefix \
+           --set ingress.tls[0].hosts[0]=${{ steps.vars.outputs.pr_url }}  \
+           --set ingress.tls[0].secretName=tls-secret \
+           --set ingress.annotations."kubernetes\.io/ingress\.class"=azure/application-gateway \
+           --set ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt \
+           --set ingress.annotations."nginx\.ingress\.kubernetes\.io/rewrite-target"=$1 \
+           --set-string ingress.annotations."nginx\.ingress\.kubernetes\.io/use-regex"="true" \
+           --set livenessProbe.path=/\ \
+           --set readinessProbe.path=/\ \
+
+    - uses: actions/github-script@v4
+      name: 'Create github pr comment and deployment'
+      with:
+        script: |
+            const pullObj = await github.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.number }}
+            })
+            //console.log(pullObj)
+            const deploymentObj = await github.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: pullObj.data.head.ref,
+              required_contexts:[],
+              environment: "pr_environment",
+              auto_merge: false
+            })
+            //console.log(deploymentObj)
+            console.log(deploymentObj.data.id)
+            await github.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deploymentObj.data.id,
+              state: "success",
+              environment: "pr_environment",
+              environment_url: "https://${{ steps.vars.outputs.pr_url }}",
+              description: "This Pull Request was deployed successfully to dynamic pr environment"
+            })
+            await github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: "Review this PR here - https://${{ steps.vars.outputs.pr_url }}"
+            })
+            
+    
