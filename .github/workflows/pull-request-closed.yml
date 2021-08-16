@@ -4,7 +4,7 @@ on:
     types: [closed]
  
 env:
-  APP_NAME: theatermanagement-bff
+  APP_NAME: moviecatalog-svc
 jobs:
   build:
     name: Remove_Preview_Environment_and_Deploy_to_Prod
