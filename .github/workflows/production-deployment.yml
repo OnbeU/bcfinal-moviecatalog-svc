@@ -24,12 +24,14 @@ jobs:
       run: |
          echo ::set-output name=url_tag::production-${{ env.APP_NAME }}-${{secrets.TEAM_NAME}}
          echo ::set-output name=pr_url::production-${{ env.APP_NAME }}.${{secrets.TEAM_NAME}}.${{secrets.HOST_URL}}
+         echo ::set-output name=random_tag_suffix::$(git rev-parse --short=7 ${{ github.sha }})-$RANDOM 
         
     - name: 'echo version tags'
       id: echovars
       run: |
          echo  URL TAG -${{steps.vars.outputs.url_tag}}
          echo  PR URL-${{steps.vars.outputs.pr_url}}
+         echo  random tag suffix-${{steps.vars.outputs.random_tag_suffix}}
    
     - name: 'Login via Azure CLI'
       uses: azure/login@v1
@@ -57,7 +59,7 @@ jobs:
        registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
        registry-username: ${{ secrets.REGISTRY_USERNAME }}
        registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-       name: aci-${{env.APP_NAME}}
+       name: aci-${{env.APP_NAME}}-${{steps.vars.outputs.random_tag_suffix}}
        location: 'West US 2'
 
     - name: Pull HELM chart
