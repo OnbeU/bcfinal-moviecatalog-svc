@@ -24,7 +24,7 @@ jobs:
          url_tag_suffix=$(git rev-parse --short=7 ${{ github.sha }})
          fi
          echo ::set-output name=url_tag::pr-${url_tag_suffix}-${{ env.APP_NAME }}-${{secrets.TEAM_NAME}}
-         echo ::set-output name=pr_url::pr-${url_tag_suffix}-${{ env.APP_NAME }}-${{secrets.TEAM_NAME}}.${{secrets.HOST_URL}}
+         echo ::set-output name=pr_url::pr-${url_tag_suffix}-${{ env.APP_NAME }}.${{secrets.TEAM_NAME}}.${{secrets.HOST_URL}}
          echo  URL TAG Suffix -${url_tag_suffix}
     - name: 'echo version tags'
       id: echovars
