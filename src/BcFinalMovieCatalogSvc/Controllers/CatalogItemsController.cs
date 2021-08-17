@@ -38,7 +38,6 @@ namespace BcFinalMovieCatalogSvc.Controllers
             {
                 return NotFound();
             }
-
             return catalogItem;
         }
     }
