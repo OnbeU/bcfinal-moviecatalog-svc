@@ -39,10 +39,11 @@ jobs:
       run: |
           az aks get-credentials -n ${{ secrets.AKS_NAME }} -g ${{ secrets.AKS_RESOURCE_GROUP }} --admin
     
-    - name: Delete Helm Chart
-      run: helm delete ${{ steps.vars.outputs.url_tag }} --namespace ${{ steps.vars.outputs.url_tag }}
-
-    - name: Delete Namespace
+    - name: Delete Helm Chart and K8s Namespace
       if: always()
-      run: kubectl delete namespace ${{ steps.vars.outputs.url_tag }}
+      run: |
+          if kubectl get namespaces -o json | jq -r ".items[].metadata.name" | grep ${{ steps.vars.outputs.url_tag }};then
+             helm delete ${{ steps.vars.outputs.url_tag }} --namespace ${{ steps.vars.outputs.url_tag }}
+             kubectl delete namespace ${{ steps.vars.outputs.url_tag }}
+          fi
     
