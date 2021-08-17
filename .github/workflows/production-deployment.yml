@@ -91,9 +91,7 @@ jobs:
            --set ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt \
            --set ingress.annotations."nginx\.ingress\.kubernetes\.io/rewrite-target"=$1 \
            --set-string ingress.annotations."nginx\.ingress\.kubernetes\.io/use-regex"="true" \
-           --set livenessProbe.enabled=false \
-           --set readinessProbe.enabled=false \
-# --set livenessProbe.path=/\ \
-# --set readinessProbe.path=/\ \
+           --set livenessProbe.path= /hc \
+           --set readinessProbe.path= /hc \
 
    
