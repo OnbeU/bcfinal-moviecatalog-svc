@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BcFinalMovieCatalogSvc.Data;
+using Microsoft.Extensions.Logging;
 
 namespace BcFinalMovieCatalogSvc.Controllers
 {
@@ -12,10 +13,12 @@ namespace BcFinalMovieCatalogSvc.Controllers
     public class CatalogItemsController : ControllerBase
     {
         private readonly BcFinalMovieCatalogSvcContext _context;
+        private readonly ILogger<CatalogItemsController> _logger;
 
-        public CatalogItemsController(BcFinalMovieCatalogSvcContext context)
+        public CatalogItemsController(BcFinalMovieCatalogSvcContext context, ILogger<CatalogItemsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: api/CatalogItems
