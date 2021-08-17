@@ -23,7 +23,7 @@ jobs:
       id: vars
       run: |
          echo ::set-output name=url_tag::production-${{ env.APP_NAME }}-${{secrets.TEAM_NAME}}
-         echo ::set-output name=pr_url::production-${{ env.APP_NAME }}-${{secrets.TEAM_NAME}}.${{secrets.HOST_URL}}
+         echo ::set-output name=pr_url::production-${{ env.APP_NAME }}.${{secrets.TEAM_NAME}}.${{secrets.HOST_URL}}
         
     - name: 'echo version tags'
       id: echovars
